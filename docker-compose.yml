@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+    web:
+        image: nginx:latest
+        # build:
+        #       context: ./dockerfiles/nginx
+        #       dockerfile: Dockerfile
+        ports:
+            - "8080:80"
+            - "443:443"
+        volumes:
+            - ./www:/var/www
+            - ./config/nginx/:/etc/nginx/conf.d/
+            - ./logs/nginx:/var/log/nginx
+            # - ./ssl:/etc/ssl/
+        links:
+            - php
+#7.4.2
+    php:
+        build:
+              context: ./dockerfiles/php
+              dockerfile: Dockerfile
+        ports:
+            - "9080:9000"
+        volumes:
+            - ./www:/var/www
+            - ./config/php-fpm/php-fpm.conf:/usr/local/etc/php-fpm.conf
+        links:
+            - mysql
+            - redis
+#8.18
+    mysql:
+        build:
+              context: ./dockerfiles/mysql
+              dockerfile: Dockerfile
+        ports:
+            - "3306:3306"
+        # volumes:
+        #   - ./config/mysql:/etc/mysql:rw
+        #   - ./.data/db/:/var/lib/mysql:rw
+#       command: --secure-file-priv "/tmp"
+        command: --default-authentication-plugin=mysql_native_password --explicit_defaults_for_timestamp
+        user: mysql:mysql
+        environment:
+            - MYSQL_ROOT_PASSWORD=root
+              #        command: --federated
+    redis:
+        image: redis:latest
+        ports:
+            - "6379:6379"
